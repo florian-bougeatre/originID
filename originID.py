@@ -1,48 +1,50 @@
 import requests
 
 
-# Refactored in case of integration with the NRU bot
+# AUTHOR : Belgrobin/Belgobrine/florian-bougeatre
+
+# Get ids from file
+# If file not exist, create it
+# Return ids array
 def get_ids():
-    ids = []
     filepath_in = "./ids.txt"
     try:
-        file = open(filepath_in)
-        for line in file.readlines():
-            if not line.startswith('#'):
-                ids.append(line.removesuffix('\n'))
+        ids = [line.removesuffix('\n') for line in open(filepath_in).readlines() if not line.startswith('#')]
     except FileNotFoundError:
-        file = open(filepath_in, "w")
-        file.write("#Start writing the ids to test below\n#Exemple :\nBelgobrine\nBelgrobrin")
+        open(filepath_in, "w").write("#Start writing the ids to test below\n#Exemple :\nBelgobrine\nBelgrobrin")
+        ids = [line.removesuffix('\n') for line in open(filepath_in).readlines() if not line.startswith('#')]
     finally:
         return ids
 
 
-# Refactored in case of integration with the NRU bot
+# Write the output array to file
 def output(output_arr):
     filepath_out = "./out.txt"
-    out = open(filepath_out, "a")
-    out.writelines(output_arr)
+    open(filepath_out, "a").writelines(output_arr)
 
 
-# Refactored in case of integration with the NRU bot
-def verify_ids():
-    url = "https://signin.ea.com/p/ajax/user/checkOriginId?requestorId=portal&originId=@"
+# Iterate over ids array
+# Verify the ids on Origin
+# Write the result out array
+def verify_ids(ids_arr):
+    url = "https://signin.ea.com/p/ajax/user/checkOriginId?requestorId=portal&originId="
     out = []
-    for id in get_ids():
-        if not id.startswith('#'):
-            json = requests.get(url.replace('@', id)).json()
-            status = json["status"]
-            message = json["message"]
-            print(id, status, message)
+    for id in ids_arr:
+        json = requests.get(url + id).json()
+        status, message = json["status"], json["message"]
+        print(id, status, message)
+        if status:
+            out.append(f"{id} IS VALID\n")
+        elif message == "origin_id_duplicated":
+            out.append(f"{id} IS DUPLICATED\n")
+        elif message == "origin_id_not_allowed":
+            out.append(f"{id} IS NOT ALLOWED\n")
+        else:
+            out.append(f"{id} IS OTHER : {message}\n")
+    return out
 
-            if status:
-                out.append(id + " IS VALID\n")
-            elif message == "origin_id_duplicated":
-                out.append(id + " IS DUPLICATED\n")
-            elif message == "origin_id_not_allowed":
-                out.append(id + " IS NOT ALLOWED\n")
-    output(out)
 
-
-# Calling main function
-verify_ids()
+# Gets the ids
+# Verify the ids
+# Sends the results array to output function
+output(verify_ids(get_ids()))
