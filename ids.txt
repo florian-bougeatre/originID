@@ -1,0 +1,6 @@
+#Start writing the ids to test below
+#Exemple :
+Belgobrine
+Belgrobrin
+ThisOneIsOK
+FUCKUMOM
